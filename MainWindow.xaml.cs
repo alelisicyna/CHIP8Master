@@ -16,8 +16,16 @@ namespace CHIP8Master;
 /// </summary>
 public partial class MainWindow : Window
 {
+
+    Emulator emu = new Emulator();
+
     public MainWindow()
     {
         InitializeComponent();
+    }
+
+    private void Button_Click(object sender, RoutedEventArgs e)
+    {
+        emu.Run("buba.ch8");
     }
 }

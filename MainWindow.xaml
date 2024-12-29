@@ -6,7 +6,8 @@
         xmlns:local="clr-namespace:CHIP8Master"
         mc:Ignorable="d"
         Background="Black"
-        Title="CHIP8Master Launcher" Height="720" Width="1280">
+        Title="CHIP8Master" Height="720" Width="1280">
     <Grid>
+        <Button x:Name="button1" Width="60" Height="30" Content="Click" Click="Button_Click" />
     </Grid>
 </Window>
