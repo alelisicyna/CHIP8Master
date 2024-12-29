@@ -1,10 +1,10 @@
-﻿/* using System;
+﻿using System;
 using System.Numerics;
 using Raylib_cs;
 
 class Emulator {
     // Size of window
-    static int Increase = 20;
+    static int Increase = 10;
     static int[] WindowSize = [64 * Increase, 32 * Increase];
 
     // CPU
@@ -94,11 +94,6 @@ class Emulator {
         [0xF055] = OpcodeFX55,
         [0xF065] = OpcodeFX65
     };
-
-    static string LoadRom(string FilePath = @".\roms\pong.ch8") {
-        string ROM = FilePath;
-        return ROM;
-    }
 
     static void Opcode0NNN() {
         //
@@ -248,17 +243,15 @@ class Emulator {
         //
     }
 
-    public static void Main() {
-        Raylib.InitWindow(WindowSize[0], WindowSize[1], Path.GetFileName(LoadRom()));
+    // The main method
+    public void Run(string FilePath) {
+        Raylib.InitWindow(WindowSize[0], WindowSize[1], FilePath);
 
         Raylib.SetTargetFPS(60);
         while (!Raylib.WindowShouldClose()) {
             Raylib.BeginDrawing();
-            // Raylib.ClearBackground(Color.Black);
-
             Raylib.EndDrawing();
         }
         Raylib.CloseWindow();
     }
 }
-*/
