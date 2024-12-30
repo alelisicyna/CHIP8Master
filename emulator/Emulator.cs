@@ -22,7 +22,7 @@ class Emulator {
     public static int FPS = 60;
     public static int Opcode = 0;
 
-    public static bool IsDrawing = false;
+    public static bool IsDrawing = true;
 
     static Dictionary<KeyboardKey, int> KeySet = new Dictionary<KeyboardKey, int>()
     {
@@ -289,13 +289,13 @@ class Emulator {
         //
     }
 
-    static void DrawScreen() {
+    static void DrawScreen(Color BackgroundColor, Color ColorPixels) {
         Raylib.ClearBackground(Color.Black);
         for (int i = 0; i < ScreenBuffer.Length; i++) {
             if (ScreenBuffer[i] == 1) {
-                Raylib.DrawRectangle((i % 64) * Increase, (i / 64) * Increase, Increase, Increase, Color.White);
+                Raylib.DrawRectangle((i % 64) * Increase, (i / 64) * Increase, Increase, Increase, ColorPixels);
             } else {
-                Raylib.DrawRectangle((i % 64) * Increase, (i / 64) * Increase, Increase, Increase, Color.Black);
+                Raylib.DrawRectangle((i % 64) * Increase, (i / 64) * Increase, Increase, Increase, BackgroundColor);
             }
         }
     }
@@ -306,7 +306,7 @@ class Emulator {
     }
 
     // The main method
-    public void Run(string Directory, string FileName) {
+    public void Run(string Directory, string FileName, Color BackgroundColor, Color ColorPixels) {
         string FilePath = $"{Directory}{FileName}";
         Raylib.InitWindow(WindowSize[0], WindowSize[1], $"PongEmu - {FileName}");
 
@@ -317,9 +317,10 @@ class Emulator {
         Raylib.SetTargetFPS(FPS);
         while (!Raylib.WindowShouldClose()) {
             Raylib.BeginDrawing();
-            if (IsDrawing) DrawScreen();
+            if (IsDrawing) DrawScreen(BackgroundColor, ColorPixels);
             Raylib.EndDrawing();
         }
+        
         Raylib.CloseWindow();
     }
 }
