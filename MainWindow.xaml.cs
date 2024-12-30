@@ -4,10 +4,11 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+
+using Raylib_cs;
 
 namespace PongEmu;
 
@@ -21,12 +22,12 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        emu.Run("./roms/", "pong.ch8");
+        emu.Run("./roms/", "pong.ch8", Color.Black, Color.White);
     }
 
     private void Button_Click(object sender, RoutedEventArgs e)
     {
-        emu.Run("./roms/", "pong.ch8");
+        emu.Run("./roms/", "pong.ch8", Color.Black, Color.White);
     }
 
     private void Button_Click2(object sender, RoutedEventArgs e)
