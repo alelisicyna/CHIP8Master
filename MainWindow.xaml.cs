@@ -9,23 +9,28 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace CHIP8Master;
+namespace PongEmu;
 
 /// <summary>
 /// Interaction logic for MainWindow.xaml
 /// </summary>
 public partial class MainWindow : Window
 {
-
     Emulator emu = new Emulator();
 
     public MainWindow()
     {
         InitializeComponent();
+        emu.Run("./roms/", "pong.ch8");
     }
 
     private void Button_Click(object sender, RoutedEventArgs e)
     {
-        emu.Run("buba.ch8");
+        emu.Run("./roms/", "pong.ch8");
+    }
+
+    private void Button_Click2(object sender, RoutedEventArgs e)
+    {
+        emu.Close();
     }
 }

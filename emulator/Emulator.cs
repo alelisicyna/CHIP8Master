@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO; 
+using System.Text; 
 using System.Numerics;
 using Raylib_cs;
 
@@ -13,9 +15,14 @@ class Emulator {
     public static ushort[] Registers = new ushort[16];
     public static int I = 0;
     public static ushort[] Stack = new ushort[16];
-    public static int SP = -1;
+    public static int SP = 0;
     public static int SoundTimer = 0;
     public static int DelayTimer  = 0;
+    public static byte[] ScreenBuffer = new byte[32 * 64];
+    public static int FPS = 60;
+    public static int Opcode = 0;
+
+    public static bool IsDrawing = false;
 
     static Dictionary<KeyboardKey, int> KeySet = new Dictionary<KeyboardKey, int>()
     {
@@ -36,7 +43,7 @@ class Emulator {
         [KeyboardKey.B] = 11,
         [KeyboardKey.V] = 15,
     };
-    int[] Fonts = [
+    public static byte[] Fonts = [
         0xF0, 0x90, 0x90, 0x90, 0xF0,  // 0
         0x20, 0x60, 0x20, 0x20, 0x70,  // 1
         0xF0, 0x10, 0xF0, 0x80, 0xF0,  // 2
@@ -95,96 +102,135 @@ class Emulator {
         [0xF065] = OpcodeFX65
     };
 
+    public void Initialize() {
+        PC = 512;
+        for (int i = 0; i < Fonts.Length /* 80 */; i++) {
+            Memory[i] = Fonts[i];
+        }
+    }
+
+    public void LoadRom(string FilePath) {
+        var CHIPFile = File.ReadAllBytes(FilePath);
+        for (int i = 0; i < CHIPFile.Length; i++) {
+            Memory[i + 0x200] = CHIPFile[i];
+        }
+    }
+
     static void Opcode0NNN() {
-        //
+        // Calls machine code routine (RCA 1802 for COSMAC VIP) at address NNN.
+        // Not necessary for most ROMs.
+
+        if (Opcode == 0x0) {
+            Raylib.CloseWindow();
+        }
+        if (Opcode == 0xe0) {
+            Opcode00E0();
+            return;
+        }
+
+        try {
+            Opcodes[Opcode & 0xf00f]();
+        } catch {
+            PC = PC + 2;
+        }
     }
 
     static void Opcode00E0() {
-        Raylib.ClearBackground(Color.Black);
+        // Clears the screen.
+
+        ScreenBuffer = new byte[32 * 64];
+        IsDrawing = true;
+        PC = PC + 2;
     }
 
     static void Opcode00EE() {
-        //
+        // Returns from a subroutine.
+
+        PC = Stack[SP] + 2;
+        SP = SP - 1;
     }
     
     static void Opcode1NNN() {
-        //
+        // Jumps to address NNN.
+
+        PC = Opcode & 0x0FFF;
     }
     
     static void Opcode2NNN() {
-        //
+        // Calls subroutine at NNN.
     }
     
     static void Opcode3XNN() {
-        //
+        // Skips the next instruction if VX equals NN (usually the next instruction is a jump to skip a code block).
     }
 
     static void Opcode4XNN() {
-        //
+        // Skips the next instruction if VX does not equal NN (usually the next instruction is a jump to skip a code block).
     }
     
     static void Opcode5XY0() {
-        //
+        // Skips the next instruction if VX equals VY (usually the next instruction is a jump to skip a code block).
     }
 
     static void Opcode6XNN() {
-        //
+        // Sets VX to NN.
     }
     
     static void Opcode7XNN() {
-        //
+        // Adds NN to VX (carry flag is not changed).
     }
 
     static void Opcode8XY0() {
-        //
+        // Sets VX to the value of VY.
     }
     
     static void Opcode8XY1() {
-        //
+        // Sets VX to VX or VY. (bitwise OR operation).
     }
 
     static void Opcode8XY2() {
-        //
+        // Sets VX to VX and VY. (bitwise AND operation).
     }
     
     static void Opcode8XY3() {
-        //
+        // Sets VX to VX xor VY.
     }
 
     static void Opcode8XY4() {
-        //
+        // Adds VY to VX. VF is set to 1 when there's an overflow, and to 0 when there is not.
     }
     
     static void Opcode8XY5() {
-        //
+        // VY is subtracted from VX. VF is set to 0 when there's an underflow, and 1 when there is not. (i.e. VF set to 1 if VX >= VY and 0 if not).
     }
 
     static void Opcode8XY6() {
-        //
+        // Shifts VX to the right by 1, then stores the least significant bit of VX prior to the shift into VF.
     }
     
     static void Opcode8XY7() {
-        //
+        // Sets VX to VY minus VX. VF is set to 0 when there's an underflow, and 1 when there is not. (i.e. VF set to 1 if VY >= VX).
     }
 
     static void Opcode8XYE() {
-        //
+        // Shifts VX to the left by 1, then sets VF to 1 if the most significant bit of VX prior to that shift was set, or to 0 if it was unset.
     }
     
     static void Opcode9XY0() {
-        //
+        // Skips the next instruction if VX does not equal VY.
+        // (Usually the next instruction is a jump to skip a code block).
     }
 
     static void OpcodeANNN() {
-        //
+        // Sets I to the address NNN.
     }
     
     static void OpcodeBNNN() {
-        //
+        // Jumps to the address NNN plus V0.
     }
 
     static void OpcodeCXNN() {
-        //
+        // Sets VX to the result of a bitwise and operation on a random number (Typically: 0 to 255) and NN.
     }
     
     static void OpcodeDXYN() {
@@ -243,13 +289,35 @@ class Emulator {
         //
     }
 
-    // The main method
-    public void Run(string FilePath) {
-        Raylib.InitWindow(WindowSize[0], WindowSize[1], FilePath);
+    static void DrawScreen() {
+        Raylib.ClearBackground(Color.Black);
+        for (int i = 0; i < ScreenBuffer.Length; i++) {
+            if (ScreenBuffer[i] == 1) {
+                Raylib.DrawRectangle((i % 64) * Increase, (i / 64) * Increase, Increase, Increase, Color.White);
+            } else {
+                Raylib.DrawRectangle((i % 64) * Increase, (i / 64) * Increase, Increase, Increase, Color.Black);
+            }
+        }
+    }
 
-        Raylib.SetTargetFPS(60);
+    // Close CHIP-8 window
+    public void Close() {
+        Raylib.CloseWindow();
+    }
+
+    // The main method
+    public void Run(string Directory, string FileName) {
+        string FilePath = $"{Directory}{FileName}";
+        Raylib.InitWindow(WindowSize[0], WindowSize[1], $"PongEmu - {FileName}");
+
+        // Emulation preparation
+        Initialize();
+        LoadRom(FilePath);
+
+        Raylib.SetTargetFPS(FPS);
         while (!Raylib.WindowShouldClose()) {
             Raylib.BeginDrawing();
+            if (IsDrawing) DrawScreen();
             Raylib.EndDrawing();
         }
         Raylib.CloseWindow();

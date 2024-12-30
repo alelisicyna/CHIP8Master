@@ -2,7 +2,7 @@
 using System.Data;
 using System.Windows;
 
-namespace CHIP8Master;
+namespace PongEmu;
 
 /// <summary>
 /// Interaction logic for App.xaml
